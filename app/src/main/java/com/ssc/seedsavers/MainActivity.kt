@@ -82,6 +82,7 @@ class MainActivity : AppCompatActivity() {
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
                 if(url?.startsWith("http") == true) {
+                    progressBar.visibility=View.VISIBLE
                     view?.loadUrl(url.toString())
                     return true
                 }else{
@@ -95,6 +96,7 @@ class MainActivity : AppCompatActivity() {
             }
             override fun onPageCommitVisible(view: WebView?, url: String?) {
                 super.onPageCommitVisible(view, url)
+                webView.visibility=View.VISIBLE
                 progressBar.visibility = View.GONE
                 root.setBackgroundColor(Color.WHITE)
             }
