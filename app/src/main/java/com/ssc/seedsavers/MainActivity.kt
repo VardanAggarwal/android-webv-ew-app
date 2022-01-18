@@ -1,8 +1,11 @@
 package com.ssc.seedsavers
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
@@ -18,6 +21,20 @@ import android.widget.ProgressBar
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.dynamiclinks.ktx.dynamicLinks
 import com.google.firebase.ktx.Firebase
+import android.webkit.WebChromeClient
+import androidx.core.app.ActivityCompat
+
+import android.content.pm.PackageManager
+
+import androidx.core.content.ContextCompat
+import android.webkit.ValueCallback
+import android.widget.Toast
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.content.ClipData
+
+
+
 
 
 class MainActivity : AppCompatActivity() {
@@ -28,6 +45,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var analytics: FirebaseAnalytics
     private lateinit var url:String
     private lateinit var context: Context
+    private var mUploadMessage: ValueCallback<Array<Uri>>? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -38,7 +56,24 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             webView.settings.safeBrowsingEnabled=false
         }
+        if (Build.VERSION.SDK_INT >= 23 && (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+            ) != PackageManager.PERMISSION_GRANTED)
+        ) {
+            ActivityCompat.requestPermissions(
+                this@MainActivity,
+                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA),
+                1
+            )
+        }
         webView.settings.javaScriptEnabled=true
+        webView.settings.allowFileAccess=true
+        webView.settings.mixedContentMode=0
+        webView.settings.domStorageEnabled = true
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
@@ -62,6 +97,32 @@ class MainActivity : AppCompatActivity() {
                 super.onPageCommitVisible(view, url)
                 progressBar.visibility = View.GONE
                 root.setBackgroundColor(Color.WHITE)
+            }
+        }
+        webView.webChromeClient = object : WebChromeClient(){
+            override fun onShowFileChooser(mWebView:WebView,
+                                           filePathCallback:ValueCallback<Array<Uri>>,
+                                           fileChooserParams:FileChooserParams):Boolean {
+                if (mUploadMessage != null) {
+                    mUploadMessage!!.onReceiveValue(null)
+                    mUploadMessage = null
+                }
+                mUploadMessage = filePathCallback
+                val contentSelectionIntent = Intent(Intent.ACTION_GET_CONTENT)
+                contentSelectionIntent.addCategory(Intent.CATEGORY_OPENABLE)
+                contentSelectionIntent.type = "*/*"
+                contentSelectionIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE,true)
+                val intent = Intent(Intent.ACTION_CHOOSER)
+                intent.putExtra(Intent.EXTRA_INTENT, contentSelectionIntent)
+                intent.putExtra(Intent.EXTRA_TITLE, "File Chooser")
+                try {
+                    getFileResultLauncher.launch(intent)
+                } catch (e: ActivityNotFoundException) {
+                    mUploadMessage = null
+                    Toast.makeText(getApplicationContext(), "Cannot Open File Chooser", Toast.LENGTH_LONG).show()
+                    return false
+                }
+                return true
             }
         }
         var uri: Uri?
@@ -94,6 +155,27 @@ class MainActivity : AppCompatActivity() {
         createNotificationChannel()
 
     }
+    val getFileResultLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+            ar: ActivityResult ->
+        val intent: Intent? = ar.data
+        Log.w(TAG,"result from launcher ${intent}")
+        val clipData=intent?.clipData
+        val result:Array<Uri>?
+        if (intent == null || ar.resultCode != RESULT_OK){
+            result = null
+        }
+        else if(clipData!=null){
+            fun ClipData.convertToList(): List<Uri> = 0.until(itemCount).map { getItemAt(it).uri }
+            result=clipData.convertToList().toTypedArray()
+        }else{
+            result = arrayOf(Uri.parse(intent.dataString))
+        }
+        mUploadMessage!!.onReceiveValue(result)
+        mUploadMessage = null
+    }
+
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         // Check if the key event was the Back button and if there's history
         if (keyCode == KeyEvent.KEYCODE_BACK && webView.canGoBack()) {
