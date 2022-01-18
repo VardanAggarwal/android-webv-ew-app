@@ -18,8 +18,6 @@ import android.widget.ProgressBar
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.dynamiclinks.ktx.dynamicLinks
 import com.google.firebase.ktx.Firebase
-import android.os.StrictMode
-import android.os.StrictMode.ThreadPolicy
 
 
 class MainActivity : AppCompatActivity() {
@@ -32,19 +30,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var context: Context
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        StrictMode.setThreadPolicy(
-            ThreadPolicy.Builder()
-                .detectAll() // Checks for all violations
-                .penaltyLog() // Output violations via logging
-                .build()
-        )
-
         setContentView(R.layout.activity_main)
         progressBar = findViewById(R.id.progressBar)
         progressBar.visibility = View.VISIBLE
-        analytics = FirebaseAnalytics.getInstance(this)
         webView = findViewById(R.id.webview)
         root = webView.rootView
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            webView.settings.safeBrowsingEnabled=false
+        }
         webView.settings.javaScriptEnabled=true
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
         CookieManager.getInstance().setAcceptCookie(true)
@@ -75,24 +68,31 @@ class MainActivity : AppCompatActivity() {
         fun isDynamicLink():Boolean{
             return intent.hasExtra("com.google.firebase.dynamiclinks.DYNAMIC_LINK_DATA")||intent.data.toString().contains("page.link")
         }
-        if (isDynamicLink()){
-            Firebase.dynamicLinks
-                .getDynamicLink(intent)
-                .addOnSuccessListener(this) { pendingDynamicLinkData ->
-                    // Get deep link from result (may be null if no link is found)
-                    uri = pendingDynamicLinkData.link
-                    url = uri?.toString() ?: "https://app.seedsaversclub.com"
-                    webView.loadUrl(url)
-                }
-                .addOnFailureListener(this) { e -> Log.w(TAG, "getDynamicLink:onFailure", e) }
-        }else if(intent.hasExtra("url")){
-            webView.loadUrl(intent.extras?.getString("url")?:"https://app.seedsaversclub.com")
-        }else{
-            uri = intent.data
-            url = uri?.toString() ?: "https://app.seedsaversclub.com"
-            webView.loadUrl(url)
+        when {
+            intent.extras==null&&intent.data==null->{webView.loadUrl("https://app.seedsaversclub.com")}
+            isDynamicLink() -> {
+                Firebase.dynamicLinks
+                    .getDynamicLink(intent)
+                    .addOnSuccessListener(this) { pendingDynamicLinkData ->
+                        // Get deep link from result (may be null if no link is found)
+                        uri = pendingDynamicLinkData.link
+                        url = uri?.toString() ?: "https://app.seedsaversclub.com"
+                        webView.loadUrl(url)
+                    }
+                    .addOnFailureListener(this) { e -> Log.w(TAG, "getDynamicLink:onFailure", e) }
+            }
+            intent.hasExtra("url") -> {
+                webView.loadUrl(intent.extras?.getString("url")?:"https://app.seedsaversclub.com")
+            }
+            else -> {
+                uri = intent.data
+                url = uri?.toString() ?: "https://app.seedsaversclub.com"
+                webView.loadUrl(url)
+            }
         }
+        analytics = FirebaseAnalytics.getInstance(this)
         createNotificationChannel()
+
     }
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         // Check if the key event was the Back button and if there's history

@@ -2,19 +2,18 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.ssc.seedsavers">
+    <queries>
+        <intent>
+            <action android:name="*" />
+            <data android:mimeType="*/*" />
+        </intent>
+        <provider android:authorities="com.facebook.katana.provider.PlatformProvider" /> <!-- allows app to access Facebook app features -->
+        <provider android:authorities="com.facebook.orca.provider.PlatformProvider" /> <!-- allows sharing to Messenger app -->
+    </queries>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <meta-data
-        android:name="com.google.firebase.messaging.default_notification_icon"
-        android:resource="@drawable/ic_ssc_notification" />
-    <!-- Set color used with incoming notification messages. This is used when no color is set for the incoming
-         notification message. See README(https://goo.gl/6BKBk7) for more. -->
-    <meta-data
-        android:name="com.google.firebase.messaging.default_notification_color"
-        android:resource="@color/green" />
     <application
-        android:allowBackup="true"
         android:icon="@drawable/ic_ssc_logo"
         android:label="@string/app_name"
         android:roundIcon="@drawable/ic_ssc_logo"
@@ -22,6 +21,15 @@
         tools:replace="android:supportsRtl"
         android:hardwareAccelerated="true"
         android:theme="@style/Theme.SeedSaversClub">
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_ssc_notification" />
+        <!-- Set color used with incoming notification messages. This is used when no color is set for the incoming
+             notification message. See README(https://goo.gl/6BKBk7) for more. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/green" />
+
         <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
         <meta-data android:name="com.facebook.sdk.AutoLogAppEventsEnabled"
             android:value="true"/>
@@ -75,5 +83,4 @@
             </intent-filter>
         </service>
     </application>
-
 </manifest>
