@@ -1,15 +1,15 @@
 package com.ssc.seedsavers
 
 import android.app.PendingIntent
-import android.app.TaskStackBuilder
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import com.bumptech.glide.Glide
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
@@ -23,22 +23,23 @@ class VectorFirebaseMessagingService: FirebaseMessagingService() {
         Log.i(TAG,"onNewToken: FCM Token has been updated [$token]")
     }
     private fun showNotification(message: RemoteMessage){
-        val intent: Intent
-        val pendingIntent: PendingIntent?
-        intent = Intent(this,MainActivity::class.java)
+        val intent = Intent(this,MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
         if(message.data.containsKey("url")) {
             intent.setData(Uri.parse(message.data["url"]))
         }
-        pendingIntent = TaskStackBuilder.create(this).run {
-            // Add the intent, which inflates the back stack
-            addNextIntentWithParentStack(intent)
-            // Get the PendingIntent containing the entire back stack
-            getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
-        }
+        val flags =
+            if (SDK_INT >= Build.VERSION_CODES.S) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
+        val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent,  flags)
         val bitmap: Bitmap?
         var style: NotificationCompat.Style
         if (message.notification?.getImageUrl() != null) {
-            bitmap = Glide.with(this).asBitmap().load(message.notification?.imageUrl).submit().get()
+            bitmap = GlideApp.with(this).asBitmap().load(message.notification?.imageUrl).submit().get()
             style = NotificationCompat.BigPictureStyle()
                 .bigPicture(bitmap)
                 .bigLargeIcon(null)

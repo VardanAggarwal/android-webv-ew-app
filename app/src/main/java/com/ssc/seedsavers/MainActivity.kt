@@ -53,9 +53,6 @@ class MainActivity : AppCompatActivity() {
         progressBar.visibility = View.VISIBLE
         webView = findViewById(R.id.webview)
         root = webView.rootView
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            webView.settings.safeBrowsingEnabled=false
-        }
         if (Build.VERSION.SDK_INT >= 23 && (ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
