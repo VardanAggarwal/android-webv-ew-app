@@ -32,9 +32,7 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.content.ClipData
-
-
-
+import java.net.URI
 
 
 class MainActivity : AppCompatActivity() {
@@ -74,16 +72,26 @@ class MainActivity : AppCompatActivity() {
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
-        webView.settings.userAgentString="Seed Savers Club"
+        val versionCode = BuildConfig.VERSION_CODE
+        webView.settings.userAgentString= "Seed Savers Club - $versionCode"
         context=this
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-                if(url?.startsWith("http") == true) {
+                if(URI(url).getHost().contains("seedsaversclub.com") == true) {
                     progressBar.visibility=View.VISIBLE
                     view?.loadUrl(url.toString())
                     return true
                 }else{
-                    return false
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+
+                    // The following flags launch the app outside the current app
+
+                    // The following flags launch the app outside the current app
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+
+                    startActivity(intent)
+
+                    return true
                 }
             }
             override fun onPageFinished(view: WebView?, url: String?) {
