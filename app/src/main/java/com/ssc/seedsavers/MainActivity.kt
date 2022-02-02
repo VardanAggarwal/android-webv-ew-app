@@ -73,23 +73,31 @@ class MainActivity : AppCompatActivity() {
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
         val versionCode = BuildConfig.VERSION_CODE
-        webView.settings.userAgentString= "Seed Savers Club - $versionCode"
+        webView.settings.userAgentString= "Seed Savers Club-$versionCode"
         context=this
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-                if(URI(url).getHost().contains("seedsaversclub.com") == true) {
+                if(URI(url).getHost()?.contains("seedsaversclub.com") == true) {
                     progressBar.visibility=View.VISIBLE
                     view?.loadUrl(url.toString())
                     return true
                 }else{
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url.toString()))
 
                     // The following flags launch the app outside the current app
 
                     // The following flags launch the app outside the current app
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
 
-                    startActivity(intent)
+                    if (intent.resolveActivity(getPackageManager()) != null) {
+                        startActivity(intent);
+                    }else{
+                        val text = R.string.no_app
+                        val duration = Toast.LENGTH_SHORT
+
+                        val toast = Toast.makeText(applicationContext, text, duration)
+                        toast.show()
+                    }
 
                     return true
                 }
