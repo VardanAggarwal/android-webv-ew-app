@@ -14,24 +14,20 @@ import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
-import android.webkit.CookieManager
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import android.widget.ProgressBar
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.dynamiclinks.ktx.dynamicLinks
 import com.google.firebase.ktx.Firebase
-import android.webkit.WebChromeClient
 import androidx.core.app.ActivityCompat
 
 import android.content.pm.PackageManager
 
 import androidx.core.content.ContextCompat
-import android.webkit.ValueCallback
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.content.ClipData
+import android.webkit.*
 import java.net.URI
 
 
@@ -67,7 +63,7 @@ class MainActivity : AppCompatActivity() {
         }
         webView.settings.javaScriptEnabled=true
         webView.settings.allowFileAccess=true
-        webView.settings.mixedContentMode=0
+        webView.settings.mixedContentMode=1
         webView.settings.domStorageEnabled = true
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
         CookieManager.getInstance().setAcceptCookie(true)
@@ -77,6 +73,9 @@ class MainActivity : AppCompatActivity() {
         context=this
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                if(URI(url).scheme =="javascript" || URI(url).scheme=="file"){
+                    return true
+                }
                 if(URI(url).getHost()?.contains("seedsaversclub.com") == true) {
                     progressBar.visibility=View.VISIBLE
                     view?.loadUrl(url.toString())
@@ -101,6 +100,17 @@ class MainActivity : AppCompatActivity() {
 
                     return true
                 }
+            }
+
+            override fun shouldInterceptRequest(
+                view: WebView?,
+                request: WebResourceRequest?
+            ): WebResourceResponse? {
+                if(URI(request?.url.toString()).scheme=="file"){
+                    return WebResourceResponse("text/html", "UTF-8", null)
+
+                }
+                return super.shouldInterceptRequest(view, request)
             }
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
