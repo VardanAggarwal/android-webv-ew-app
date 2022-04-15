@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity() {
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
 
                     if (intent.resolveActivity(getPackageManager()) != null) {
-                        startActivity(intent);
+                        startActivity(intent)
                     }else{
                         val text = R.string.no_app
                         val duration = Toast.LENGTH_SHORT
