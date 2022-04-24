@@ -28,8 +28,9 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.content.ClipData
 import android.webkit.*
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.messaging.FirebaseMessaging
 import java.net.URI
-
 
 class MainActivity : AppCompatActivity() {
     private val TAG = MainActivity::class.qualifiedName
@@ -78,7 +79,14 @@ class MainActivity : AppCompatActivity() {
                 }
                 if(URI(url).getHost()?.contains("seedsaversclub.com") == true) {
                     progressBar.visibility=View.VISIBLE
-                    view?.loadUrl(url.toString())
+                    var token=context.getSharedPreferences("_", MODE_PRIVATE).getString("fcmtoken", "null");
+                    if(token=="null"){
+                       fcmtoken()
+                       token=context.getSharedPreferences("_", MODE_PRIVATE).getString("fcmtoken", "null");
+                    }
+                    val finalUrl=Uri.parse(url).buildUpon().appendQueryParameter("fcmtoken",token).build()
+                    Log.d(TAG,"fcmtoken is ${token}")
+                    view?.loadUrl(finalUrl.toString())
                     return true
                 }else{
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url.toString()))
@@ -226,5 +234,17 @@ class MainActivity : AppCompatActivity() {
                 getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
+    }
+    private  fun fcmtoken(){
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w(TAG, "Fetching FCM registration token failed", task.exception)
+                return@OnCompleteListener
+            }
+
+            // Get new FCM registration token
+            val token = task.result
+            getSharedPreferences("_", MODE_PRIVATE).edit().putString("fcmtoken", token).apply();
+        })
     }
 }

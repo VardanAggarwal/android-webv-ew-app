@@ -20,7 +20,10 @@ class VectorFirebaseMessagingService: FirebaseMessagingService() {
             showNotification(message)
     }
     override fun onNewToken(token: String) {
+        super.onNewToken(token);
+        getSharedPreferences("_", MODE_PRIVATE).edit().putString("fcmtoken", token).apply();
         Log.i(TAG,"onNewToken: FCM Token has been updated [$token]")
+
     }
     private fun showNotification(message: RemoteMessage){
         val intent = Intent(this,MainActivity::class.java).apply {
