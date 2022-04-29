@@ -29,8 +29,8 @@ android {
         applicationId "com.ssc.seedsavers"
         minSdkVersion 21
         targetSdkVersion 31
-        versionCode 392
-        versionName "0.3.92"
+        versionCode 400
+        versionName "0.4.0"
         multiDexEnabled true
 
 

@@ -1,9 +1,9 @@
 <resources>
-    <string name="app_name">Seed Savers Club</string>
-    <string name="channel_name">Farmer Network Notifications</string>
-    <string name="channel_description">Updates from Farmer Network</string>
+    <string name="app_name">Herbal Mandi</string>
+    <string name="channel_name">Important Notifications</string>
+    <string name="channel_description">Updates from Network</string>
     <string name="facebook_app_id">852906262106769</string>
     <string name="fb_login_protocol_scheme">fb852906262106769</string>
     <string name="facebook_client_token">cf1945b8addd020c9af91b761b1b35b7</string>
-    <string name="no_app">इससे जुडी कोई एप्प नहीं मिली</string>
+    <string name="no_app">No app found</string>
 </resources>
